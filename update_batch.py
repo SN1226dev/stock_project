@@ -4,6 +4,7 @@ import sqlite3
 import pandas as pd
 import time
 from db_utils import update_stock
+from datetime import datetime
 DB_PATH = "all_stocks.db"
 
 
@@ -29,7 +30,8 @@ def main():
     tickers = [f"{code}.T" for code in tickers_df["コード"].tolist()]
     print(f"[INFO] 対象銘柄数: {len(tickers)}")
 
-    for i, ticker in enumerate(tickers[:15], 1):
+    target = tickers[:20]
+    for i, ticker in enumerate(target, 1):
         try:
             print(f"[{i}/{len(tickers)}] {ticker}")
             update_stock(ticker)
@@ -37,5 +39,10 @@ def main():
         except Exception as e:
             print(f"{ticker} 失敗:", e)
 
+    with open("log.txt", "a") as f:
+        f.write(f"{datetime.now()} 完了（{len(target)}件処理）\n")
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("手動停止しました")

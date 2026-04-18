@@ -22,7 +22,7 @@ def update_stock(ticker):
 
     # 開始日決定
     if pd.isna(last_date):
-        start_date = "2015-01-01"
+        start_date = "2005-01-01"
     else:
         start_date = (
             pd.to_datetime(last_date) + pd.Timedelta(days=1)
