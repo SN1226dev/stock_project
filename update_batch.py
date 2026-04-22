@@ -8,8 +8,6 @@ from datetime import datetime
 DB_PATH = "all_stocks.db"
 
 
-
-
 # =====================
 # メイン処理
 # =====================
@@ -30,7 +28,7 @@ def main():
     tickers = [f"{code}.T" for code in tickers_df["コード"].tolist()]
     print(f"[INFO] 対象銘柄数: {len(tickers)}")
 
-    target = tickers[:20]
+    target = tickers[:200]
     for i, ticker in enumerate(target, 1):
         try:
             print(f"[{i}/{len(tickers)}] {ticker}")

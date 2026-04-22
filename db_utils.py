@@ -12,12 +12,12 @@ def update_stock(ticker):
     conn = sqlite3.connect(DB_PATH)
 
     # 最新日付取得
-    query = f"""
+    query = """
     SELECT MAX(date) as max_date
     FROM stock_price
-    WHERE ticker = '{ticker}'
+    WHERE ticker = ?
     """
-    last_date_df = pd.read_sql(query, conn)
+    last_date_df = pd.read_sql(query, conn, params=[ticker])
     last_date = last_date_df.loc[0, "max_date"]
 
     # 開始日決定
@@ -65,9 +65,9 @@ def update_stock(ticker):
      # =====================
         # ⑤ 重複除去（最重要）
      # =====================
-    existing_dates = pd.read_sql(f"""
-    SELECT date FROM stock_price WHERE ticker = '{ticker}'
-    """, conn)
+    existing_dates = pd.read_sql("""
+    SELECT date FROM stock_price WHERE ticker = ?
+    """, conn, params=[ticker])
 
     df = df[~df["date"].isin(existing_dates["date"])]
 
