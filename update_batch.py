@@ -5,7 +5,7 @@ import pandas as pd
 import time
 from db_utils import update_stock
 from datetime import datetime
-DB_PATH = "all_stocks.db"
+DB_PATH = "db/all_stocks.db"
 
 
 # =====================
@@ -16,16 +16,16 @@ def main():
     conn = sqlite3.connect(DB_PATH)
 
     tickers_df = pd.read_sql("""
-    SELECT コード
+    SELECT ticker
     FROM stock_master
-    WHERE 市場・商品区分 LIKE '%プライム%'
-    or 市場・商品区分 LIKE '%グロース%'
-    or 市場・商品区分 LIKE '%スタンダード%'
+    WHERE market LIKE '%プライム%'
+    or market LIKE '%グロース%'
+    or market LIKE '%スタンダード%'
     """, conn)
 
     conn.close()
 
-    tickers = [f"{code}.T" for code in tickers_df["コード"].tolist()]
+    tickers = tickers_df["ticker"].tolist()
     print(f"[INFO] 対象銘柄数: {len(tickers)}")
 
     target = tickers[:200]

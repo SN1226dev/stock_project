@@ -4,8 +4,8 @@ import sqlite3
 import pandas as pd
 import yfinance as yf
 import time
-DB_PATH = "all_stocks.db"
-
+DB_PATH = "db/all_stocks.db"
+print("★★★ build_light_db 実行された ★★★")
 def update_stock(ticker):
 
     # DB接続

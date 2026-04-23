@@ -3,7 +3,7 @@ import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 
-DB_PATH = "all_stocks.db"
+DB_PATH = "db/light.db"
 
 st.title("株価データ取得ツールβ")
 
@@ -11,16 +11,14 @@ st.title("株価データ取得ツールβ")
 def load_stock_data(ticker):
     conn = sqlite3.connect(DB_PATH)
 
-    # 銘柄名
     name_df = pd.read_sql("""
-    SELECT 銘柄名
+    SELECT company_name
     FROM stock_master
-    WHERE コード = ?
-    """, conn, params=[ticker.replace(".T", "")])
+    WHERE ticker = ?
+    """, conn, params=[ticker])
 
     company_name = name_df.iloc[0, 0] if not name_df.empty else None
 
-    # 株価
     df = pd.read_sql("""
     SELECT *
     FROM stock_price
@@ -30,7 +28,7 @@ def load_stock_data(ticker):
 
     conn.close()
 
-    df["銘柄名"] = company_name
+    df["company_name"] = company_name
 
     return df
 
@@ -39,19 +37,19 @@ conn = sqlite3.connect(DB_PATH)
 
 
 tickers_df = pd.read_sql("""
-SELECT t.ticker, m.銘柄名
+SELECT t.ticker, m.company_name
 FROM (
     SELECT DISTINCT ticker
     FROM stock_price
 ) t
 LEFT JOIN stock_master m
-ON REPLACE(t.ticker, '.T', '') = CAST(m.コード AS TEXT)
+ON t.ticker = m.ticker
 ORDER BY t.ticker
 """, conn)
 
 
 # 表示用（会社名付き）
-tickers_df["label"] = tickers_df["ticker"] + " (" + tickers_df["銘柄名"].fillna("") + ")"
+tickers_df["label"] = tickers_df["ticker"] + " (" + tickers_df["company_name"].fillna("") + ")"
 
 selected_label = st.selectbox("銘柄選択", tickers_df["label"])
 
@@ -63,7 +61,7 @@ df = load_stock_data(ticker)
 if df.empty:
     st.warning("データなし")
 else:
-    company_name = df["銘柄名"].iloc[0]
+    company_name = df["company_name"].iloc[0]
     st.title(f"{ticker}（{company_name}）")
 
     st.success("データ取得完了")
