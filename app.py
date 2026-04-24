@@ -9,13 +9,16 @@ DB_PATH = "db/light.db"
 
 st.title("株価データ取得ツールβ")
 init_counter() 
-if "counted" not in st.session_state:
-    count = update_counter()
-    st.session_state["count"] = count
-    st.session_state["counted"] = True
-else:
-    count = st.session_state["count"]
+try:
+    if "counted" not in st.session_state:
+        count = update_counter()
+        st.session_state["count"] = count
+        st.session_state["counted"] = True
+    else:
+        count = st.session_state["count"]
 
+except:
+    count = 0
 
 
 @st.cache_data
