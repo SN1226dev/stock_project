@@ -3,7 +3,6 @@ import pandas as pd
 
 FULL_DB = "db/all_stocks.db"
 LIGHT_DB = "db/light.db"
-print("★★★ build_light_db 実行された ★★★")
 def build_light_db():
     conn = sqlite3.connect(FULL_DB)
 
