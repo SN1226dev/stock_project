@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 *.db
 .ipynb_checkpoints/
+
+# 例外（これだけアップする）
+!db/light.db

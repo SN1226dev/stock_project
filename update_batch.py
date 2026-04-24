@@ -28,7 +28,7 @@ def main():
     tickers = tickers_df["ticker"].tolist()
     print(f"[INFO] 対象銘柄数: {len(tickers)}")
 
-    target = tickers[:200]
+    target = tickers[:700]
     for i, ticker in enumerate(target, 1):
         try:
             print(f"[{i}/{len(tickers)}] {ticker}")
