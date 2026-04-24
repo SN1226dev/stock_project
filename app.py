@@ -2,10 +2,25 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
+import requests 
 
 DB_PATH = "db/light.db"
 
 st.title("株価データ取得ツールβ")
+
+def update_counter():
+    url = "https://api.countapi.xyz/hit/stock-app-nomura/visits"
+    res = requests.get(url).json()
+    return res["value"]
+
+if "counted" not in st.session_state:
+    count = update_counter()
+    st.session_state["count"] = count
+    st.session_state["counted"] = True
+else:
+    count = st.session_state["count"]
+
+st.metric("訪問数", count)
 
 @st.cache_data
 def load_stock_data(ticker):
