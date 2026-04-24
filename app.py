@@ -133,4 +133,4 @@ else:
         mime="text/csv"
     )
 
-    st.caption(f"👀 累計訪問数：{count}")
+    st.caption(f"👀 累計訪問数：{count if count else 0}")
