@@ -3,16 +3,12 @@ import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests 
+from utils.counter import init_counter, update_counter
 
 DB_PATH = "db/light.db"
 
 st.title("株価データ取得ツールβ")
-
-def update_counter():
-    url = "https://api.countapi.xyz/hit/stock-app-nomura/visits"
-    res = requests.get(url).json()
-    return res["value"]
-
+init_counter() 
 if "counted" not in st.session_state:
     count = update_counter()
     st.session_state["count"] = count
@@ -20,7 +16,7 @@ if "counted" not in st.session_state:
 else:
     count = st.session_state["count"]
 
-st.metric("訪問数", count)
+
 
 @st.cache_data
 def load_stock_data(ticker):
@@ -61,7 +57,7 @@ LEFT JOIN stock_master m
 ON t.ticker = m.ticker
 ORDER BY t.ticker
 """, conn)
-
+conn.close()
 
 # 表示用（会社名付き）
 tickers_df["label"] = tickers_df["ticker"] + " (" + tickers_df["company_name"].fillna("") + ")"
@@ -77,8 +73,6 @@ if df.empty:
     st.warning("データなし")
 else:
     company_name = df["company_name"].iloc[0]
-    st.title(f"{ticker}（{company_name}）")
-
     st.success("データ取得完了")
 
     st.write("最終更新日:", df["date"].max())
@@ -135,3 +129,5 @@ else:
         file_name=f"{ticker}.csv",
         mime="text/csv"
     )
+
+    st.caption(f"👀 累計訪問数：{count}")
