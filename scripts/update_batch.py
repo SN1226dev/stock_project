@@ -1,9 +1,11 @@
 #update_batch.py
-
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import sqlite3
 import pandas as pd
 import time
-from db_utils import update_stock
+from src.update_db import update_stock
 from datetime import datetime
 DB_PATH = "db/all_stocks.db"
 
@@ -28,7 +30,7 @@ def main():
     tickers = tickers_df["ticker"].tolist()
     print(f"[INFO] 対象銘柄数: {len(tickers)}")
 
-    target = tickers[:700]
+    target = tickers[:4000]
     for i, ticker in enumerate(target, 1):
         try:
             print(f"[{i}/{len(tickers)}] {ticker}")

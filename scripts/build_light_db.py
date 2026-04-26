@@ -6,12 +6,12 @@ LIGHT_DB = "db/light.db"
 def build_light_db():
     conn = sqlite3.connect(FULL_DB)
 
-    print("データ抽出中（直近2年）...")
+    print("データ抽出中（直近1年）...")
 
     df_price = pd.read_sql("""
     SELECT *
     FROM stock_price
-    WHERE date >= date('now', '-2 years')
+    WHERE date >= date('now', '-12 months')
     """, conn)
 
     df_master = pd.read_sql("""
