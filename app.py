@@ -9,123 +9,137 @@ from src.ranking import create_volume_ranking
 
 DB_PATH = "db/light.db"
 
-st.title("📈 株価分析ダッシュボード")
-
+st.title(" 株価分析ダッシュボードβ")
 
 # =========================
-# アクセスカウンタ
+# カウンタ
 # =========================
 try:
     init_counter()
-
     if "counted" not in st.session_state:
         count = update_counter()
         st.session_state["count"] = count
         st.session_state["counted"] = True
     else:
         count = st.session_state["count"]
-except Exception:
+except:
     count = 0
 
-
 # =========================
-# 個別銘柄データ取得
+# データ取得（軽量化）
 # =========================
-@st.cache_data
-def load_stock_data(ticker):
-    conn = sqlite3.connect(DB_PATH)
+@st.cache_data(ttl=300)
+def get_ranking():
+    df_all = load_price_data()
 
-    name_df = pd.read_sql("""
-        SELECT company_name
-        FROM stock_master
-        WHERE ticker = ?
-    """, conn, params=[ticker])
+    # 👇 ここ追加（超重要）
+    df_all["date"] = pd.to_datetime(df_all["date"])
+    df_all = df_all[
+        df_all["date"] >= df_all["date"].max() - pd.Timedelta(days=60)
+    ]
 
-    company_name = name_df.iloc[0, 0] if not name_df.empty else ""
+    ranking = create_volume_ranking(df_all)
+    ranking = ranking.sort_values("score", ascending=False).head(30)
 
-    df = pd.read_sql("""
-        SELECT *
-        FROM stock_price
-        WHERE ticker = ?
-        ORDER BY date
-    """, conn, params=[ticker])
+    return ranking
 
-    conn.close()
-
-    df["company_name"] = company_name
-    return df
+# 👇 ここも変更
+ranking = get_ranking()
 
 
-# =========================
-# ランキング作成
-# =========================
-df_all = load_price_data()
-ranking = create_volume_ranking(df_all)
 
 conn = sqlite3.connect(DB_PATH)
-
-master = pd.read_sql("""
-    SELECT ticker, company_name
-    FROM stock_master
-""", conn)
-
+master = pd.read_sql("SELECT ticker, company_name FROM stock_master", conn)
 conn.close()
 
 ranking = ranking.merge(master, on="ticker", how="left")
 ranking["company_name"] = ranking["company_name"].fillna("")
 
-
 # =========================
-# ランキング表示用テーブル
+# 表用データ
 # =========================
 ranking_view = ranking.copy()
 
 ranking_view["順位"] = range(1, len(ranking_view) + 1)
+
 ranking_view["銘柄"] = ranking_view["ticker"] + " " + ranking_view["company_name"]
-ranking_view["前日比株価"] = (ranking_view["return_1d"] * 100).round(1).astype(str) + "%"
-ranking_view["出来高倍率"] = ranking_view["vol_ratio"].round(1).astype(str) + "倍"
+
 ranking_view["株価"] = ranking_view["close"].apply(lambda x: f"{int(x):,}円")
+
+ranking_view["前日比"] = (ranking_view["return_1d"] * 100).round(1).astype(str) + "%"
+
+ranking_view["5日前株価"] = ranking_view["close_5d"].apply(
+    lambda x: f"{int(x):,}円" if pd.notna(x) else "-"
+)
+
+ranking_view["5日騰落率"] = ranking_view["return_5d"].apply(
+    lambda x: f"{round(x*100,1)}%" if pd.notna(x) else "-"
+)
+
+ranking_view["出来高倍率"] = ranking_view["vol_ratio"].round(1).astype(str) + "倍"
+
 ranking_view["出来高"] = ranking_view["volume"].apply(lambda x: f"{int(x):,}株")
-ranking_view["平均出来高"] = (
-    ranking_view["volume"] / ranking_view["vol_ratio"]
-).apply(lambda x: f"{int(x):,}株")
 
 ranking_view = ranking_view[
-      ["順位", "銘柄", "株価", "前日比株価", "出来高倍率", "出来高"]
+    ["順位", "銘柄", "株価", "5日前株価", "5日騰落率", "前日比", "出来高倍率", "出来高"]
 ]
 
+st.subheader(" 出来高急増ランキング")
 
-
-
-top_n = st.slider("表示件数", 5, 50, 10)
-st.subheader(f"🔥 出来高急増ランキング（TOP{top_n}）")
-
-st.dataframe(
-    ranking_view.head(top_n),
+# =========================
+#  クリック選択（ここが神UI）
+# =========================
+event = st.dataframe(
+    ranking_view,
     use_container_width=True,
-    height=400
+    hide_index=True,
+    on_select="rerun",
+    selection_mode="single-row"
 )
 
+# 初期値（1位）
+if "selected_ticker" not in st.session_state:
+    st.session_state["selected_ticker"] = ranking.iloc[0]["ticker"]
 
-# 👇 ここに追加（超重要）
-options = ranking_view["銘柄"].head(top_n).tolist()
+# クリックされたら更新
+if event.selection.rows:
+    selected_index = event.selection.rows[0]
+    st.session_state["selected_ticker"] = ranking.iloc[selected_index]["ticker"]
 
-selected_label = st.selectbox(
-    "銘柄選択",
-    options,
-    index=0  # ← これを追加
-)
-ticker = selected_label.split()[0]
-
+ticker = st.session_state["selected_ticker"]
 
 # =========================
-# 個別データ表示
+# 個別データ取得
 # =========================
+@st.cache_data
+def load_stock_data(ticker):
+    conn = sqlite3.connect(DB_PATH)
+
+    name_df = pd.read_sql(
+        "SELECT company_name FROM stock_master WHERE ticker = ?",
+        conn,
+        params=[ticker]
+    )
+
+    company_name = name_df.iloc[0, 0] if not name_df.empty else ""
+
+    df = pd.read_sql(
+        "SELECT * FROM stock_price WHERE ticker = ? ORDER BY date",
+        conn,
+        params=[ticker]
+    )
+
+    conn.close()
+    df["company_name"] = company_name
+    return df
+
 df_stock = load_stock_data(ticker)
 
+# =========================
+# 詳細表示
+# =========================
 if df_stock.empty:
     st.warning("データなし")
-
 else:
     company_name = df_stock["company_name"].iloc[0]
 
@@ -180,18 +194,15 @@ else:
 
     st.pyplot(fig)
 
-    # =========================
-    # CSVダウンロード
-    # =========================
+    # CSV
     csv = df_view.to_csv(index=False).encode("utf-8-sig")
 
     st.download_button(
-        label="📥 CSVダウンロード",
+        "📥 CSVダウンロード",
         data=csv,
         file_name=f"{ticker}.csv",
         mime="text/csv"
     )
-
 
 # =========================
 # フッター
