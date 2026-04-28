@@ -12,6 +12,7 @@ def create_volume_ranking(df):
     # 前処理
     # =========================
     df["date"] = pd.to_datetime(df["date"])
+    df = df.dropna(subset=["volume", "close"])
     df = df.sort_values(["ticker", "date"])
 
     # =========================

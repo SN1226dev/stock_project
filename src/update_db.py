@@ -1,11 +1,9 @@
-
-#db_utils.py.py
+#db_utils.py
 import sqlite3
 import pandas as pd
 import yfinance as yf
 import time
 DB_PATH = "db/all_stocks.db"
-print("★★★ build_light_db 実行された ★★★")
 def update_stock(ticker):
 
     # DB接続
@@ -91,3 +89,5 @@ def update_stock(ticker):
 
     conn.commit()
     conn.close()
+
+
