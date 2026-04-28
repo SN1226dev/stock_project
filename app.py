@@ -435,14 +435,14 @@ ax1.set_facecolor("#0f0f0f")
 ax2.set_facecolor("#0f0f0f")
 
 # 線・棒
-ax1.plot(df_plot["date"], df_plot["close"], label="終値", linewidth=2)
-ax1.plot(df_plot["date"], df_plot["ma25"], label="25日移動平均", linewidth=2)
+ax1.plot(df_plot["date"], df_plot["close"], label="Close Price", linewidth=2)
+ax1.plot(df_plot["date"], df_plot["ma25"], label="25-day MA", linewidth=2)
 
-ax2.bar(df_plot["date"], df_plot["volume"], label="出来高")
+ax2.bar(df_plot["date"], df_plot["volume"], label="Volume")
 
 # タイトル
-ax1.set_title("株価推移", fontsize=14, color="white", pad=12)
-ax2.set_title("出来高", fontsize=13, color="white", pad=10)
+ax1.set_title("Stock Price Trend", fontsize=14, color="white", pad=12)
+ax2.set_title("Volume", fontsize=13, color="white", pad=10)
 
 # 軸ラベル・目盛りを白くする
 ax1.tick_params(axis="x", colors="white")
