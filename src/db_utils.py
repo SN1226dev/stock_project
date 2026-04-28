@@ -11,6 +11,7 @@ def load_price_data():
     df = pd.read_sql("""
     SELECT ticker, date, volume, close
     FROM stock_price
+    WHERE date >= date('now', '-60 day')
     """, conn)
 
     conn.close()
