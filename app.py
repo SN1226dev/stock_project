@@ -197,6 +197,8 @@ ranking_view["前日比"] = ranking_view["return_1d"].apply(
     lambda x: f"{x * 100:.1f}%" if pd.notna(x) else "-"
 )
 
+ranking_view["出来高"] = ranking_view["volume"].apply(lambda x: f"{int(x):,}")
+
 ranking_view["出来高倍率"] = ranking_view["vol_ratio"].apply(
     lambda x: f"{x:.1f}倍" if pd.notna(x) else "-"
 )
@@ -210,7 +212,7 @@ ranking_view["シグナル"] = ranking_view["breakout"].apply(
 )
 
 ranking_view = ranking_view[
-    ["順位", "銘柄", "株価", "前日比", "出来高倍率", "トレンド", "シグナル"]
+    ["順位", "銘柄", "株価", "前日比","出来高","出来高倍率", "トレンド", "シグナル"]
 ]
 
 
@@ -229,6 +231,7 @@ with st.expander("🔥 出来高急増ランキング", expanded=True):
             "銘柄": st.column_config.TextColumn(width="medium"),
             "株価": st.column_config.TextColumn(width="small"),
             "前日比": st.column_config.TextColumn(width="small"),
+            "出来高": st.column_config.TextColumn(width="small"),
             "出来高倍率": st.column_config.TextColumn(width="small"),
             "トレンド": st.column_config.TextColumn(width="small"),
             "シグナル": st.column_config.TextColumn(width="small"),
