@@ -113,21 +113,12 @@ except Exception:
 # =========================
 @st.cache_data(ttl=300)
 def get_ranking():
-    df_all = load_price_data()
+    df = load_price_data()
+    return create_volume_ranking(df)
 
-    df_all["date"] = pd.to_datetime(df_all["date"])
-    df_all = df_all[
-        df_all["date"] >= df_all["date"].max() - pd.Timedelta(days=60)
-    ]
-
-    ranking = create_volume_ranking(df_all)
-    ranking = ranking.sort_values("score", ascending=False).head(30)
-
-    return ranking
 
 
 ranking = get_ranking()
-
 if ranking.empty:
     st.warning("ランキングデータがありません")
     st.stop()
@@ -144,36 +135,6 @@ ranking = ranking.merge(master, on="ticker", how="left")
 ranking["company_name"] = ranking["company_name"].fillna("")
 
 
-# =========================
-# ランキング用シグナル計算
-# =========================
-@st.cache_data(ttl=300)
-def get_signal_data():
-    df_all = load_price_data()
-    df_all["date"] = pd.to_datetime(df_all["date"])
-    df_all = df_all.sort_values(["ticker", "date"])
-
-    df_all["ma25"] = df_all.groupby("ticker")["close"].transform(
-        lambda x: x.rolling(25).mean()
-    )
-
-    df_all["high20"] = df_all.groupby("ticker")["close"].transform(
-        lambda x: x.rolling(20).max()
-    )
-
-    df_all["trend"] = df_all["close"] > df_all["ma25"]
-    df_all["breakout"] = df_all["close"] > df_all.groupby("ticker")["high20"].shift(1)
-
-    latest_signal = df_all.groupby("ticker").tail(1)
-
-    return latest_signal[["ticker", "trend", "breakout"]]
-
-
-signal_df = get_signal_data()
-
-ranking = ranking.merge(signal_df, on="ticker", how="left")
-ranking["trend"] = ranking["trend"].fillna(False)
-ranking["breakout"] = ranking["breakout"].fillna(False)
 
 
 # =========================
